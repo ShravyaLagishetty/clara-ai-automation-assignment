@@ -55,6 +55,7 @@ Pipeline B (Onboarding → v2 Agent Update)
 | JavaScript (n8n Code nodes) | Data parsing and transformation |
 | JSON files | Storage of structured configuration |
 | GitHub | Version control and project submission |
+| Asana | Task and project tracking |
 
 All tools used are free and open-source, satisfying the assignment constraint of avoiding paid APIs.
 
@@ -253,6 +254,21 @@ Agent configuration-agent_config.json<br>
 Versioning	v1 → v2<br>
 Change tracking-changelog.json<br>
 Zero-cost tooling - n8n + Docker
+
+
+## Project Management
+
+The assignment tasks and progress were tracked using **Asana**.  
+The Asana board was used to organize the development stages including:
+
+- Understanding the Clara AI workflow requirements
+- Designing Pipeline A (Demo → v1 Agent)
+- Implementing Pipeline B (Onboarding → v2 Update)
+- Testing transcript parsing logic
+- Generating structured configuration outputs
+- Preparing the final project documentation
+
+This helped structure the implementation process and track milestones throughout the assignment.
 
 ## Conclusion
 
