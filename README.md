@@ -27,23 +27,22 @@ Maintaining version updates between demo and onboarding stages
 
 The automation consists of two pipelines.
 
-
 Demo Call Transcript
-        │
-        ▼
+│
+▼
 Pipeline A (Demo → v1 Agent)
-        │
-        ├── memo.json
-        └── agent_config.json
+│
+├── memo.json
+└── agent_config.json
 
-Onboarding Transcript
-        │
-        ▼
+Onboarding Call Transcript
+│
+▼
 Pipeline B (Onboarding → v2 Agent Update)
-        │
-        ├── memo.json (updated)
-        ├── agent_config.json
-        └── changelog.json
+│
+├── memo.json (updated)
+├── agent_config.json
+└── changelog.json
 
 ## Tools Used
 
@@ -121,9 +120,9 @@ Example structure:
 
 Pipeline B processes onboarding data and updates the agent configuration.
 
-Input
-data/onboarding_calls/onboarding_call.txt
-Extracted Information
+Input:<br>
+data/onboarding_calls/onboarding_call.txt<br>
+Extracted Information :
 
 Using regex-based extraction, the system identifies:
 
@@ -139,9 +138,10 @@ Partner email
 
 Example onboarding messages:
 
-11:18:43 From BP : info@benselectricsolutionsteam.com
-11:21:24 From BP : Shelley Manley
-11:21:41 From BP : 403-870-8494
+11:18:43 From BP : info@benselectricsolutionsteam.com<br>
+11:21:24 From BP : Shelley Manley<br>
+11:21:41 From BP : 403-870-8494<br>
+
 Processing Steps
 
 Load onboarding transcript
@@ -181,32 +181,33 @@ Example:
 ]
 
 ## Folder Structure
+
 clara-automation
 │
 ├── README.md
 │
 ├── workflows
-│   ├── demo_call_to_v1.json
-│   └── onboarding_to_v2.json
+│ ├── demo_call_to_v1.json
+│ └── onboarding_to_v2.json
 │
 ├── data
-│   ├── demo_calls
-│   │   └── demo1.txt
-│   │
-│   └── onboarding_calls
-│       └── onboarding_call.txt
+│ ├── demo_calls
+│ │ └── demo1.txt
+│ │
+│ └── onboarding_calls
+│ └── onboarding_call.txt
 │
 ├── outputs
-│   └── accounts
-│       └── ben_s_electric_solutions
-│           ├── v1
-│           │   ├── memo.json
-│           │   └── agent_config.json
-│           │
-│           └── v2
-│               ├── memo.json
-│               ├── agent_config.json
-│               └── changelog.json
+│ └── accounts
+│ └── ben_s_electric_solutions
+│ ├── v1
+│ │ ├── memo.json
+│ │ └── agent_config.json
+│ │
+│ └── v2
+│ ├── memo.json
+│ ├── agent_config.json
+│ └── changelog.json
 │
 └── docker-compose.yml
 
@@ -216,17 +217,15 @@ docker compose up -d
 2. Open n8n
 http://localhost:5678
 3. Import workflows
-
-Import:
-
-workflows/demo_call_to_v1.json
-workflows/onboarding_to_v2.json
+   Import:
+   workflows/demo_call_to_v1.json<br>
+   workflows/onboarding_to_v2.json<br>
 4. Run Pipeline A
 Demo Call → Generate v1 configuration
 5. Run Pipeline B
-Onboarding Call → Update to v2
-Key Design Decisions
-Regex-based extraction
+Onboarding Call → Update to v2<br>
+Key Design Decisions<br>
+Regex-based extraction<br>
 
 Avoids hard-coding transcript content and ensures the system works across different onboarding logs.
 
@@ -243,14 +242,14 @@ Retell-compatible agent spec
 Even without calling the Retell API, the system outputs a valid configuration format.
 
 ## Assignment Requirements Coverage
-Requirement	Implementation
-Demo call → configuration	Pipeline A
-Onboarding → updates	Pipeline B
-Structured outputs	memo.json
-Agent configuration	agent_config.json
-Versioning	v1 → v2
-Change tracking	changelog.json
-Zero-cost tooling	n8n + Docker
+Requirement	Implementation <br>
+Demo call → configuration-Pipeline A <br>
+Onboarding → updates-Pipeline B<br>
+Structured outputs-memo.json<br>
+Agent configuration-agent_config.json<br>
+Versioning	v1 → v2<br>
+Change tracking-changelog.json<br>
+Zero-cost tooling - n8n + Docker
 
 ## Conclusion
 
