@@ -27,6 +27,7 @@ Maintaining version updates between demo and onboarding stages
 
 The automation consists of two pipelines.
 
+```
 Demo Call Transcript
 │
 ▼
@@ -43,6 +44,7 @@ Pipeline B (Onboarding → v2 Agent Update)
 ├── memo.json (updated)
 ├── agent_config.json
 └── changelog.json
+```
 
 ## Tools Used
 
@@ -181,7 +183,7 @@ Example:
 ]
 
 ## Folder Structure
-
+```
 clara-automation
 │
 ├── README.md
@@ -210,6 +212,7 @@ clara-automation
 │ └── changelog.json
 │
 └── docker-compose.yml
+``` 
 
 ## How to Run
 1. Start n8n using Docker
