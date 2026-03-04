@@ -1,5 +1,5 @@
-Clara AI Automation Assignment
-Overview
+ # Clara AI Automation Assignment
+ ## Overview
 
 This project implements an automated pipeline that converts business call transcripts into structured AI agent configurations for Clara AI.
 
@@ -21,9 +21,12 @@ Producing an AI agent specification compatible with Retell
 
 Maintaining version updates between demo and onboarding stages
 
-System Architecture
+
+
+## System Architecture
 
 The automation consists of two pipelines.
+
 
 Demo Call Transcript
         │
@@ -41,16 +44,20 @@ Pipeline B (Onboarding → v2 Agent Update)
         ├── memo.json (updated)
         ├── agent_config.json
         └── changelog.json
-Tools Used
-Tool	Purpose
-n8n (self-hosted)	Workflow automation
-Docker	Local execution environment
-JavaScript (n8n Code nodes)	Data parsing and transformation
-JSON storage	Versioned agent configurations
+
+## Tools Used
+
+| Tool | Purpose |
+|------|--------|
+| n8n (self-hosted) | Workflow automation |
+| Docker | Local execution environment |
+| JavaScript (n8n Code nodes) | Data parsing and transformation |
+| JSON files | Storage of structured configuration |
+| GitHub | Version control and project submission |
 
 All tools used are free and open-source, satisfying the assignment constraint of avoiding paid APIs.
 
-Pipeline A: Demo Call → v1 Agent
+## Pipeline A: Demo Call → v1 Agent
 
 Pipeline A processes the demo sales call transcript and extracts initial business configuration.
 
@@ -110,7 +117,7 @@ Example structure:
   "prompt": "...",
   "routing": {...}
 }
-Pipeline B: Onboarding → v2 Agent Update
+## Pipeline B: Onboarding → v2 Agent Update
 
 Pipeline B processes onboarding data and updates the agent configuration.
 
@@ -173,7 +180,7 @@ Example:
   "Referral partner added"
 ]
 
-Folder Structure
+## Folder Structure
 clara-automation
 │
 ├── README.md
@@ -202,7 +209,8 @@ clara-automation
 │               └── changelog.json
 │
 └── docker-compose.yml
-How to Run
+
+## How to Run
 1. Start n8n using Docker
 docker compose up -d
 2. Open n8n
@@ -234,7 +242,7 @@ Retell-compatible agent spec
 
 Even without calling the Retell API, the system outputs a valid configuration format.
 
-Assignment Requirements Coverage
+## Assignment Requirements Coverage
 Requirement	Implementation
 Demo call → configuration	Pipeline A
 Onboarding → updates	Pipeline B
@@ -244,7 +252,7 @@ Versioning	v1 → v2
 Change tracking	changelog.json
 Zero-cost tooling	n8n + Docker
 
-Conclusion
+## Conclusion
 
 This automation demonstrates how sales and onboarding conversations can be transformed into structured AI agent configurations using workflow automation.
 
