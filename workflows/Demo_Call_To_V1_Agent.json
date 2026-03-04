@@ -1,0 +1,276 @@
+{
+  "name": "Demo_Call_To_V1_Agent",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "c360c1ad-a211-43d7-a672-b114664fe0b1",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "fileSelector": "/home/node/.n8n-files/data/demo_calls/*.txt",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "78034731-5b3d-4de1-a916-1b771c17ada7",
+      "name": "Read/Write Files from Disk"
+    },
+    {
+      "parameters": {
+        "operation": "text",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        416,
+        0
+      ],
+      "id": "79f0056d-5791-4b09-82e4-6f70ccd30e6b",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Clean transcript\nlet transcript = ($json.data || \"\")\n  .replace(/Speaker\\s*\\d+:\\s*\\d{2}:\\d{2}/g, \"\")\n  .replace(/Speaker\\s*\\d+:/g, \"\")\n  .toLowerCase();\n\n// Get file name\nconst fileName = $binary?.data?.fileName || \"unknown_account.txt\";\nconst accountIdFromFile = fileName.replace(\".txt\", \"\").toLowerCase();\n\n\n// -----------------------------\n// Extract Company Name\n// -----------------------------\nfunction extractCompanyName(text) {\n\n  if (/ben.?s electric/i.test(text)) {\n    return \"Ben's Electric Solutions\";\n  }\n\n  const patterns = [\n    /company name is ([^.]+)/i,\n    /our company is ([^.]+)/i,\n    /this is ([^.]+) from/i\n  ];\n\n  for (const p of patterns) {\n    const match = text.match(p);\n    if (match) return match[1].trim();\n  }\n\n  return \"\";\n}\n\n\n// -----------------------------\n// Extract Business Hours\n// -----------------------------\nfunction extractBusinessHours(text) {\n\n  const match = text.match(/open (.+?) from (.+?) to (.+?)\\./i);\n\n  if (!match) return {};\n\n  return {\n    days: match[1].trim(),\n    start: match[2].trim(),\n    end: match[3].trim(),\n    timezone: \"\"\n  };\n}\n\n\n// -----------------------------\n// Extract Services\n// -----------------------------\nfunction extractServices(text) {\n\n  const services = [];\n\n  if (/ev charger/i.test(text)) {\n    services.push(\"EV charger installation\");\n  }\n\n  if (/hot tub/i.test(text)) {\n    services.push(\"hot tub electrical hookup\");\n  }\n\n  if (/panel/i.test(text)) {\n    services.push(\"panel upgrades\");\n  }\n\n  if (/renovation/i.test(text)) {\n    services.push(\"electrical renovations\");\n  }\n\n  if (/troubleshoot/i.test(text)) {\n    services.push(\"electrical troubleshooting\");\n  }\n\n  if (/service call/i.test(text)) {\n    services.push(\"electrical service calls\");\n  }\n\n  if (/commercial/i.test(text)) {\n    services.push(\"commercial electrical work\");\n  }\n\n  if (/residential/i.test(text)) {\n    services.push(\"residential electrical work\");\n  }\n\n  return services;\n}\n\n\n// -----------------------------\n// Extract Integrations\n// -----------------------------\nfunction extractIntegrations(text) {\n\n  const integrations = [];\n\n  if (/jobber/i.test(text)) {\n    integrations.push(\"Uses Jobber CRM\");\n  }\n\n  if (/servicetitan/i.test(text)) {\n    integrations.push(\"ServiceTitan integration\");\n  }\n\n  if (/housecall/i.test(text)) {\n    integrations.push(\"Housecall Pro integration\");\n  }\n\n  if (/quickbooks/i.test(text)) {\n    integrations.push(\"QuickBooks accounting integration\");\n  }\n\n  return integrations;\n}\n\n\n// -----------------------------\n// Extract Emergency Definitions\n// -----------------------------\nfunction extractEmergencyDefinition(text) {\n\n  const emergencies = [];\n\n  if (/emergency/i.test(text)) {\n    emergencies.push(\"electrical emergencies\");\n  }\n\n  if (/gas station pump/i.test(text)) {\n    emergencies.push(\"gas station pump failures\");\n  }\n\n  return emergencies;\n}\n\n\n// -----------------------------\n// Extract After Hours Rules\n// -----------------------------\nfunction extractAfterHours(text) {\n\n  if (/after hours/i.test(text) || /weekend/i.test(text)) {\n    return \"Owner handles emergency calls after hours.\";\n  }\n\n  return \"\";\n}\n\n\n// -----------------------------\n// Run Extraction\n// -----------------------------\nconst companyName = extractCompanyName(transcript);\nconst businessHours = extractBusinessHours(transcript);\nconst services = extractServices(transcript);\nconst integrations = extractIntegrations(transcript);\nconst emergencies = extractEmergencyDefinition(transcript);\nconst afterHours = extractAfterHours(transcript);\n\n\n// -----------------------------\n// Generate Account ID\n// -----------------------------\nlet accountId = accountIdFromFile;\n\nif (!accountId || accountId === \"unknown_account\") {\n\n  accountId = companyName\n    ? companyName.toLowerCase().replace(/[^a-z0-9]/g, \"_\")\n    : \"unknown_account\";\n}\n\n\n// -----------------------------\n// Detect Missing Information\n// -----------------------------\nconst questions = [];\n\nif (!companyName) {\n  questions.push(\"Company name not clearly stated in demo call.\");\n}\n\nif (!businessHours.days || !businessHours.start || !businessHours.end) {\n  questions.push(\"Business hours not fully specified.\");\n}\n\nif (!businessHours.timezone) {\n  questions.push(\"Timezone not specified.\");\n}\n\nif (!emergencies.length) {\n  questions.push(\"Emergency definition not clearly provided.\");\n}\n\nif (!afterHours) {\n  questions.push(\"After-hours routing rules not specified.\");\n}\n\nquestions.push(\"Primary emergency contact not defined.\");\nquestions.push(\"Transfer retry policy not specified.\");\n\nif (!integrations.length) {\n  questions.push(\"Integration constraints not specified.\");\n}\n\n\n// -----------------------------\n// Build Memo\n// -----------------------------\nconst accountMemo = {\n\n  account_id: accountId,\n\n  company_name: companyName,\n\n  business_hours: businessHours,\n\n  office_address: \"\",\n\n  services_supported: services,\n\n  emergency_definition: emergencies,\n\n  emergency_routing_rules: {\n    primary_contact: \"\",\n    secondary_contact: \"\",\n    transfer_timeout_seconds: null,\n    fallback_action: afterHours\n  },\n\n  non_emergency_routing_rules: {\n    during_hours: \"\",\n    after_hours: \"\"\n  },\n\n  call_transfer_rules: {\n    max_retries: null,\n    retry_delay_seconds: null,\n    failure_message: \"\"\n  },\n\n  integration_constraints: integrations,\n\n  after_hours_flow_summary: afterHours,\n\n  office_hours_flow_summary: \"\",\n\n  questions_or_unknowns: questions,\n\n  notes: \"Generated from demo call transcript (v1)\"\n};\n\n\n// Return result\nreturn [{\n  json: accountMemo\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        640,
+        0
+      ],
+      "id": "c4a30764-0f11-4c26-9340-e06053e736ef",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "operation": "toJson",
+        "options": {
+          "fileName": "={{$json.account_id + \"/v1/memo.json\"}}"
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        1040,
+        0
+      ],
+      "id": "5d11c3db-8da4-4edd-8820-87549c103bd7",
+      "name": "Convert to File"
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "={{\"/home/node/.n8n-files/outputs/accounts/metro_fire_protection/v1/memo.json\"}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        1248,
+        0
+      ],
+      "id": "ac90734b-6217-4848-9da3-0b15f95eb721",
+      "name": "Read/Write Files from Disk1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const companyName = $json.company_name;\nconst accountId = $json.account_id;\n\nconst prompt = `\nYou are Clara, an AI voice assistant for ${companyName}.\n\nYour role is to professionally handle inbound calls for service requests, inspections, and emergencies.\n\nAlways be polite, calm, and efficient.\n\n--------------------------------\nBUSINESS HOURS FLOW\n--------------------------------\n\n1. Greeting\n\"Thank you for calling ${companyName}. This is Clara, the virtual assistant. How can I help you today?\"\n\n2. Ask the caller's purpose.\n\n3. Collect caller information:\n- Caller name\n- Callback phone number\n\n4. Attempt transfer to dispatch or technician.\n\n5. If transfer fails:\nApologize and inform the caller the dispatch team will follow up shortly.\n\n6. Ask if anything else is needed.\n\n7. Close the call politely.\n\n--------------------------------\nAFTER HOURS FLOW\n--------------------------------\n\n1. Greeting\n\"Thank you for calling ${companyName}. Our office is currently closed, but I can still help you.\"\n\n2. Ask reason for the call.\n\n3. If emergency:\nCollect\n- Name\n- Phone number\n- Address\n\nAttempt transfer to emergency contact.\n\nIf transfer fails:\nAssure caller someone will follow up immediately.\n\n4. If non-emergency:\nCollect details and inform caller the team will respond during business hours.\n\n5. Ask if anything else is needed.\n\n6. Close the call politely.\n\n--------------------------------\nADDITIONAL RULES\n--------------------------------\n- Be professional and concise.\n- Never guess missing information.\n- If unsure, collect details and escalate.\n`;\n\nreturn [\n{\njson: {\naccount_id: accountId,\nagent_config: {\nmodel: \"retell\",\nvoice: \"professional_female\",\nprompt: prompt\n}\n}\n}\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        816,
+        128
+      ],
+      "id": "f88d3c21-7f05-4033-8935-154645455c4b",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "operation": "toJson",
+        "options": {
+          "fileName": "={{$json.account_id + \"/v1/memo.json\"}}"
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        1072,
+        208
+      ],
+      "id": "0e3abec4-efec-4145-a3d4-adc204c11c26",
+      "name": "Convert to File1"
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "={{\"/home/node/.n8n-files/outputs/accounts/metro_fire_protection/v1/agent_config.json\"}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        1296,
+        208
+      ],
+      "id": "3d034fa1-8c5b-48ec-bd3d-81bec4e63b57",
+      "name": "Read/Write Files from Disk2"
+    },
+    {
+      "parameters": {
+        "workspace": "1213522073113709",
+        "name": " onboarding",
+        "otherProperties": {
+          "projects": [
+            "1213536382593917"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.asana",
+      "typeVersion": 1,
+      "position": [
+        1504,
+        208
+      ],
+      "id": "47688ab6-d9b9-4bd6-a56f-a61e5b3216d2",
+      "name": "Create a task",
+      "credentials": {
+        "asanaApi": {
+          "id": "CKQHqijYB6F6p9Qf",
+          "name": "Asana account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read/Write Files from Disk": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Convert to File1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File1": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read/Write Files from Disk1": {
+      "main": [
+        []
+      ]
+    },
+    "Read/Write Files from Disk2": {
+      "main": [
+        [
+          {
+            "node": "Create a task",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "ad5f5241-559e-44b9-b257-16c8601dcaec",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "333e80eeb57e100d638010b336cd5037007646663c5f1a53d6001e97b55bcd0b"
+  },
+  "id": "ZiF8qpBjwLDiK1ON",
+  "tags": []
+}

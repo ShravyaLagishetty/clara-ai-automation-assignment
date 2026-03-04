@@ -1,0 +1,300 @@
+{
+  "name": "Onboarding_To_Agent_Update",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "9d504202-5580-46cc-9b80-15437b04f439",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "fileSelector": "/home/node/.n8n-files/data/onboarding_call.txt",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "c7fa9e93-af33-4f54-b6e3-f9cc899b8100",
+      "name": "Read/Write Files from Disk"
+    },
+    {
+      "parameters": {
+        "operation": "text",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        416,
+        0
+      ],
+      "id": "2db2f310-eac7-4f20-85ca-6fd6840f9a87",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "jsCode": "const text = $json.data || \"\";\n\n// split lines\nconst lines = text.split(\"\\n\");\n\n// regex patterns\nconst emailRegex = /\\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}\\b/i;\nconst phoneRegex = /\\b\\d{3}-\\d{3}-\\d{4}\\b/i;\nconst nameRegex = /^[A-Z][a-z]+\\s[A-Z][a-z]+$/;\nconst companyRegex = /^[A-Za-z&\\s]+$/;\n\nlet contactEmail = \"\";\nlet partnerEmail = \"\";\nlet phone = \"\";\nlet contactName = \"\";\nlet partnerCompany = \"\";\n\nfor (const line of lines) {\n\n  // extract message after \"From BP :\"\n  const match = line.match(/From BP\\s*:\\s*(.*)/);\n  if (!match) continue;\n\n  const value = match[1].trim();\n\n  // classify values\n  if (emailRegex.test(value)) {\n\n    if (!contactEmail) {\n      contactEmail = value;\n    } else {\n      partnerEmail = value;\n    }\n\n  } else if (phoneRegex.test(value)) {\n\n    phone = value;\n\n  } else if (nameRegex.test(value)) {\n\n    contactName = value;\n\n  } else if (companyRegex.test(value) && value.length > 3) {\n\n    partnerCompany = value;\n\n  }\n\n}\n\nreturn [{\n  json: {\n    onboarding: {\n      contact_name: contactName,\n      contact_email: contactEmail,\n      phone: phone,\n      partner_company: partnerCompany,\n      partner_email: partnerEmail\n    }\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        624,
+        0
+      ],
+      "id": "4235d67c-842b-4237-b161-bc51cc4962ff",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "fileSelector": "/home/node/.n8n-files/outputs/accounts/metro_fire_protection/v1/memo.json",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        832,
+        0
+      ],
+      "id": "c4b89af6-4f90-4e84-b8f0-b1788dd36484",
+      "name": "Read/Write Files from Disk1"
+    },
+    {
+      "parameters": {
+        "operation": "fromJson",
+        "destinationKey": "memo",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        1040,
+        0
+      ],
+      "id": "fd0646d6-c8b2-4676-b6e7-42cc00fe86fb",
+      "name": "Extract from File1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// get v1 memo\nconst memo = $json.memo[0];\n\n// get onboarding data from previous node\nconst onboarding = $items(\"Code in JavaScript\")[0].json.onboarding;\n\nconst changes = [];\n\n// ensure routing object exists\nif (!memo.emergency_routing_rules) {\n  memo.emergency_routing_rules = {};\n}\n\n// update primary contact\nif (onboarding.contact_name) {\n  memo.emergency_routing_rules.primary_contact = onboarding.contact_name;\n  changes.push(`Primary contact added: ${onboarding.contact_name}`);\n}\n\n// update email\nif (onboarding.contact_email) {\n  memo.contact_email = onboarding.contact_email;\n  changes.push(\"Business contact email added\");\n}\n\n// update phone\nif (onboarding.phone) {\n  memo.phone = onboarding.phone;\n  changes.push(\"Business phone number added\");\n}\n\n// ensure integrations array exists\nif (!memo.integration_constraints) {\n  memo.integration_constraints = [];\n}\n\n// add referral partner\nif (onboarding.partner_company) {\n  memo.integration_constraints.push(`Referral partner: ${onboarding.partner_company}`);\n  changes.push(`Referral partner added: ${onboarding.partner_company}`);\n}\n\n// upgrade version\nmemo.version = \"v2\";\nmemo.notes = \"Updated from onboarding call dataset\";\n\nreturn [{\n  json: {\n    memo: memo,\n    changelog: changes\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1248,
+        0
+      ],
+      "id": "fedda414-e436-405e-8ebd-7f6eae3b34e5",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "/home/node/.n8n-files/outputs/accounts/metro_fire_protection/v2/memo.json",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        1920,
+        0
+      ],
+      "id": "30ba5b19-8f50-442e-82fc-66d99a43b9fa",
+      "name": "Read/Write Files from Disk2"
+    },
+    {
+      "parameters": {
+        "jsCode": "const memo = $json.memo;\n\nconst config = {\n  account_id: memo.account_id,\n  company_name: memo.company_name,\n\n  model: \"retell\",\n\n  voice: \"professional_female\",\n\n  routing: {\n    emergency_contact: memo.emergency_routing_rules?.primary_contact || \"\",\n    fallback_action: memo.after_hours_flow_summary || \"\"\n  },\n\n  services: memo.services_supported || [],\n\n  integrations: memo.integration_constraints || []\n};\n\nreturn [{\n  json: config\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1408,
+        208
+      ],
+      "id": "9b59ae79-7015-45b6-880b-80fa4cc322ae",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "operation": "toJson",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        1664,
+        0
+      ],
+      "id": "01a03fc1-0807-4068-b3c3-802ba15ef7b9",
+      "name": "Convert to File1"
+    },
+    {
+      "parameters": {
+        "operation": "toJson",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        1696,
+        208
+      ],
+      "id": "40b8839c-1f76-475c-bf03-00512d53e83e",
+      "name": "Convert to File"
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "/home/node/.n8n-files/outputs/accounts/metro_fire_protection/v2/agent_config.json",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        1952,
+        208
+      ],
+      "id": "4c007ee3-c56b-4647-aaf0-75cd0a087ba8",
+      "name": "Read/Write Files from Disk3"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read/Write Files from Disk": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read/Write Files from Disk1": {
+      "main": [
+        [
+          {
+            "node": "Extract from File1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Convert to File1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File1": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "f7ebad05-bbc9-4d0f-a05f-1a14beea28dc",
+  "meta": {
+    "instanceId": "333e80eeb57e100d638010b336cd5037007646663c5f1a53d6001e97b55bcd0b"
+  },
+  "id": "504RzhJSi9K1p0Qr",
+  "tags": []
+}
