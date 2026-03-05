@@ -1,0 +1,1 @@
+Onboarding call transcripts are excluded from this repository due to confidentiality requirements. place onboarding transcripts in this folder when running the workflow locally
